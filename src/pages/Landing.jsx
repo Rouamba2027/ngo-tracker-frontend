@@ -157,7 +157,7 @@ export default function Landing() {
             {t.loginBtn}
           </button>
           <button
-            onClick={() => setPage("register")}
+            onClick={() => setPage("register-ong")}
             className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-emerald-900 rounded-lg text-sm font-bold transition-all hover:shadow-lg hover:shadow-amber-400/30 hover:-translate-y-0.5"
           >
             {t.registerBtn}

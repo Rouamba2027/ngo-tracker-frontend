@@ -4,6 +4,7 @@ import T from "./translations"
 import Landing from "./pages/Landing"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
+import RegisterONG from "./pages/RegisterONG"
 import DashAdmin from "./dashboards/DashAdmin"
 import DashManager from "./dashboards/DashManager"
 import DashViewer from "./dashboards/DashViewer"
@@ -19,6 +20,7 @@ function AppContent() {
   if (page === "landing")      return <Landing />
   if (page === "login")        return <Login />
   if (page === "register")     return <Register />
+  if (page === "register-ong") return <RegisterONG />
   if (page === "dash-admin")   return <DashAdmin />
   if (page === "dash-manager") return <DashManager />
   if (page === "dash-viewer")  return <DashViewer />

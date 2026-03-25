@@ -303,3 +303,11 @@ export function getOrganization() {
 export function updateOrganization(payload) {
   return put("/organization", payload);
 }
+/**
+ * Create a new user (ADMIN only).
+ * @param {{ name, email, password, role: "MANAGER"|"VIEWER" }} payload
+ * @returns { user }
+ */
+export function createUser(payload) {
+  return post("/users", payload);
+}
