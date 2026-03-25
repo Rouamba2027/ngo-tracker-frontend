@@ -1,89 +1,67 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
-import { DarkToggle, LangToggle } from "../components/ui/Toggles";
-import InputField from "../components/ui/InputField";
-import { createUser } from "../api/api";
+import { register } from "../api/api";
 
 export default function Register() {
-  const { t, dark, currentUser, setPage } = useApp();
+  const { t, dark, setPage, setCurrentUser } = useApp();
 
-  // Seul ADMIN peut accéder
-  if (!currentUser || currentUser.role !== "ADMIN") {
-    setPage("dash-admin");
-    return null;
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    orgName: "",
+    receiptNumber: "",
+    country: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function handleChange(e) {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  const [role, setRole] = useState("MANAGER");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const roles = [
-    { id: "MANAGER", label: t.typeManager, icon: "🧑‍💼" },
-    { id: "VIEWER",  label: t.typeViewer,  icon: "👁️" },
-  ];
-
-  async function handleCreate() {
-    if (!name || !email || !pass) return setError("Tous les champs sont requis.");
-    if (pass.length < 8) return setError("Le mot de passe doit contenir au moins 8 caractères.");
+  async function handleSubmit() {
+    if (!form.name || !form.email || !form.password || !form.orgName) {
+      setError("Tous les champs obligatoires doivent être remplis.");
+      return;
+    }
     setError("");
+    setLoading(true);
     try {
-      const data = await createUser({ name, email, password: pass, role });
-      setSuccess(`Utilisateur ${data.user.role} créé : ${data.user.email}`);
-      setName(""); setEmail(""); setPass("");
+      const data = await register({ type: "ONG", ...form });
+      setCurrentUser(data.user);
+      setPage("dash-admin"); // redirige seulement après succès
     } catch (err) {
-      setError(err.response?.data?.error || "Erreur lors de la création de l'utilisateur.");
+      setError(err.message || "Erreur lors de la création du compte.");
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
-    <div className={`min-h-screen flex ${dark ? "bg-emerald-950" : "bg-emerald-50"}`}>
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <h1 className={`text-3xl font-bold mb-4 ${dark ? "text-white" : "text-emerald-900"}`}>
-            Créer un utilisateur
-          </h1>
+    <div className={`min-h-screen flex items-center justify-center p-8 ${dark ? "bg-emerald-950" : "bg-emerald-50"}`}>
+      <div className="w-full max-w-md">
+        <h1 className="text-3xl font-bold mb-6">Créer une ONG</h1>
 
-          {/* Sélection du rôle */}
-          <div className="mb-4">
-            <label className="block text-xs font-semibold uppercase mb-2">Type de compte</label>
-            <div className="grid grid-cols-2 gap-2">
-              {roles.map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => setRole(r.id)}
-                  className={`py-2 px-2 rounded-xl border-2 text-center
-                    ${role === r.id ? "border-amber-400 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`}>
-                  <div className="text-2xl">{r.icon}</div>
-                  <div className="text-sm font-semibold">{r.label}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+        {error && <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">⚠️ {error}</div>}
 
-          {/* Champs nom / email / mot de passe */}
-          <InputField label="Nom complet" value={name} onChange={setName} placeholder="Nom complet" dark={dark} />
-          <InputField label="Email" type="email" value={email} onChange={setEmail} placeholder="exemple@email.com" dark={dark} />
-          <InputField label="Mot de passe" type="password" value={pass} onChange={setPass} placeholder="••••••••" dark={dark} />
+        <input name="name" placeholder="Nom complet" value={form.name} onChange={handleChange} className="mb-4 w-full px-4 py-3 rounded-xl border" />
+        <input name="email" placeholder="Email" value={form.email} onChange={handleChange} className="mb-4 w-full px-4 py-3 rounded-xl border" />
+        <input name="password" type="password" placeholder="Mot de passe" value={form.password} onChange={handleChange} className="mb-4 w-full px-4 py-3 rounded-xl border" />
+        <input name="orgName" placeholder="Nom ONG" value={form.orgName} onChange={handleChange} className="mb-4 w-full px-4 py-3 rounded-xl border" />
+        <input name="receiptNumber" placeholder="Numéro reçu / SIRET" value={form.receiptNumber} onChange={handleChange} className="mb-4 w-full px-4 py-3 rounded-xl border" />
+        <input name="country" placeholder="Pays" value={form.country} onChange={handleChange} className="mb-4 w-full px-4 py-3 rounded-xl border" />
 
-          {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded">{error}</div>}
-          {success && <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded">{success}</div>}
+        <button onClick={handleSubmit} disabled={loading} className="w-full py-3.5 rounded-xl font-bold text-base bg-amber-400 hover:shadow-lg">
+          {loading ? "Création..." : "Créer le compte"}
+        </button>
 
-          <button
-            onClick={handleCreate}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-600 text-white font-bold"
-          >
-            Créer l'utilisateur
+        <p className="text-center text-sm mt-5">
+          Déjà un compte ?{" "}
+          <button onClick={() => setPage("login")} className="text-amber-600 font-semibold hover:underline">
+            Se connecter
           </button>
-
-          <p className="text-sm mt-4 text-center">
-            <button onClick={() => setPage("dash-admin")} className="text-amber-600 font-semibold hover:underline">
-              Retour au tableau de bord
-            </button>
-          </p>
-        </div>
+        </p>
       </div>
     </div>
   );
